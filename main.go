@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"strings"
 
 	"github.com/miekg/dns"
 )
@@ -35,7 +36,7 @@ func handleRequest(w dns.ResponseWriter, r *dns.Msg) {
 }
 
 func main() {
-	var addr = flag.String("addr", "127.0.0.1:5300", "listen address")
+	var port = flag.String("port", "5300", "listen port")
 	var ip = flag.String("ip", "127.0.0.1", "resolve ipv4 address")
 
 	flag.Parse()
@@ -50,9 +51,14 @@ func main() {
 		log.Fatalf("Invalid ipv4 address: %s\n", *ip)
 	}
 
-	server := &dns.Server{Addr: *addr, Net: "udp"}
+	var sb strings.Builder
+	sb.WriteString("[::]:")
+	sb.WriteString(*port)
+	var addr = sb.String()
+
+	server := &dns.Server{Addr: addr, Net: "udp"}
 	server.Handler = dns.HandlerFunc(handleRequest)
 
-	log.Printf("Listening on %s, resolving to %s\n", *addr, *ip)
+	log.Printf("Listening on %s, resolving to %s\n", addr, *ip)
 	log.Fatal(server.ListenAndServe())
 }
